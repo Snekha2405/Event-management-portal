@@ -1,0 +1,39 @@
+name: Terraform Azure Resource Group
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Init
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        run: |
+          echo "azure_credentials = <<EOF" > terraform.tfvars
+          echo "${AZURE_CREDENTIALS}" >> terraform.tfvars
+          echo "EOF" >> terraform.tfvars
+          terraform init
+
+      - name: Terraform Plan
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        run: terraform plan -var="azure_credentials=${AZURE_CREDENTIALS}"
+
+      - name: Terraform Apply
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        run: terraform apply -auto-approve -var="azure_credentials=${AZURE_CREDENTIALS}"
+
